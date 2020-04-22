@@ -8,6 +8,8 @@
         Title="" Height="480" Width="800">
     <Grid>
         <MediaElement x:Name="vide" LoadedBehavior="Manual"/>
+        <Image x:Name="cov"/>
+        <Image x:Name="disp_"/>
         <Image x:Name="disp"/>
     </Grid>
 </Window>

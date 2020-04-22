@@ -33,7 +33,7 @@ namespace KiwiedWindows
     /// 
     public partial class MainWindow : Window
     {
-        int nowstatx = 1, nowstaty = 1;
+        double nowstatx = 1, nowstaty = 1, nowcenterx = System.Windows.SystemParameters.PrimaryScreenWidth /2;
         private void Full_Screen()
         {
             //Set Full Screen
@@ -61,10 +61,22 @@ namespace KiwiedWindows
         public void Initimage()
         {
             BitmapImage shoot = new BitmapImage();
+            var width = SystemInformation.VirtualScreen.Width;
+            var height = SystemInformation.VirtualScreen.Height;
+            Bitmap Bmp = new Bitmap(width, height);
+            using (Graphics gfx = Graphics.FromImage(Bmp))
+            using (SolidBrush brush = new SolidBrush(System.Drawing.Color.FromArgb(0, 0, 0)))
+            {
+                gfx.FillRectangle(brush, 0, 0, width, height);
+            }
+            IntPtr hBitmap = Bmp.GetHbitmap();
+            System.Windows.Media.ImageSource WpfBitmap = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
             shoot.BeginInit();
             shoot.StreamSource = new MemoryStream(ReadImageMemory(GetScreenSnapshot()));
             shoot.EndInit();
             disp.Source = shoot;
+            disp_.Source = shoot;
+            cov.Source = WpfBitmap;
             return;
         }
         private static byte[] ReadImageMemory(Bitmap btmp)
@@ -81,37 +93,96 @@ namespace KiwiedWindows
             disp.Visibility = Visibility.Collapsed;
             return;
         }
+        public void Hideit_()
+        {
+            disp_.Visibility = Visibility.Collapsed;
+            return;
+        }
+        public void Hidecov()
+        {
+            cov.Visibility = Visibility.Collapsed;
+            return;
+        }
         public void Transit()
         {
             ScaleTransform scaleTransform = new ScaleTransform
             {
-                CenterX = this.Width / 2,
+                CenterX = nowcenterx,
                 CenterY = this.Height / 2,
-                ScaleX = nowstatx
-            };
+                ScaleX = nowstatx,
+                ScaleY = nowstaty
+        };
             nowstatx = -nowstatx;
-            scaleTransform.ScaleY = nowstaty;
             disp.RenderTransform = scaleTransform; 
+        }
+        public void Transit_()
+        {
+            ScaleTransform scaleTransform = new ScaleTransform
+            {
+                CenterX = 0,
+                CenterY = this.Height / 2,
+                ScaleX = -nowstatx,
+                ScaleY = -nowstaty
+        };
+            disp_.RenderTransform = scaleTransform;
+            nowstatx = -nowstatx;
         }
         private void Transforms()
         {
 
             Thread thread = new Thread(new ThreadStart(() =>
             {
+                bool scal_flag = false;
                 DateTime starter = DateTime.Now;
-                while (DateTime.Now.Subtract(starter).TotalSeconds <= 4.8) { }
+                while (DateTime.Now.Subtract(starter).TotalSeconds <= 5.4) { }
                 while (DateTime.Now.Subtract(starter).TotalSeconds <= 20)
                 {
+                    if (DateTime.Now.Subtract(starter).TotalSeconds >= 11 && DateTime.Now.Subtract(starter).TotalSeconds <= 15) { nowstaty = -nowstaty; }
+                    if (DateTime.Now.Subtract(starter).TotalSeconds >= 16 && !scal_flag) 
+                    { 
+                        nowstatx = 0.5; 
+                        scal_flag = true;
+                        System.Drawing.Rectangle rc = SystemInformation.VirtualScreen;
+                        nowcenterx = rc.Width;
+                        nowstaty = 1;
+                    }
                     disp.Dispatcher.Invoke(new Action(Transit));
-                    if (DateTime.Now.Subtract(starter).TotalSeconds >= 10 && DateTime.Now.Subtract(starter).TotalSeconds <= 15) { nowstaty = -nowstaty; }
                     Thread.Sleep(100);
                 }
+                nowstatx = 1;nowstaty = 1; disp.Dispatcher.Invoke(new Action(Transit)); 
             }))
             {
-                //In case Main exits.
+                IsBackground = true
+            };
+            Thread thread_ = new Thread(new ThreadStart(() =>
+            {
+                DateTime starter = DateTime.Now;
+                bool scal_flag = false;
+                while (DateTime.Now.Subtract(starter).TotalSeconds <=20 )
+                {
+                    if (DateTime.Now.Subtract(starter).TotalSeconds <= 15) { }
+                    else
+                    {
+                        if (DateTime.Now.Subtract(starter).TotalSeconds >= 15 && !scal_flag)
+                        {
+                            nowstatx = 0.5;
+                            scal_flag = true;
+                            System.Drawing.Rectangle rc = SystemInformation.VirtualScreen;
+                            nowcenterx = rc.Width;
+                            nowstaty = 1;
+                        }
+                        disp_.Dispatcher.Invoke(new Action(Transit_));
+                        Thread.Sleep(50);
+                    }
+                }
+                nowstatx = 1; nowstaty = 1; disp_.Dispatcher.Invoke(new Action(Transit_));
+                System.Windows.MessageBox.Show("Error","",MessageBoxButton.OK,MessageBoxImage.Error,MessageBoxResult.OK,System.Windows.MessageBoxOptions.ServiceNotification);
+            }))
+            {
                 IsBackground = true
             };
             thread.Start();
+            thread_.Start();
         }
         private void Countdowns()
         {
@@ -119,9 +190,11 @@ namespace KiwiedWindows
             Thread thread = new Thread(new ThreadStart(() =>
             {
                 DateTime starter = DateTime.Now;
-                while (DateTime.Now.Subtract(starter).TotalSeconds <= 23) { Thread.Sleep(100); }
+                while (DateTime.Now.Subtract(starter).TotalSeconds <= 24) { Thread.Sleep(100); }
                 disp.Dispatcher.Invoke(new Action(Hideit));
-                while (DateTime.Now.Subtract(starter).TotalSeconds <= 41) { Thread.Sleep(100); }
+                disp_.Dispatcher.Invoke(new Action(Hideit_));
+                cov.Dispatcher.Invoke(new Action(Hidecov));
+                while (DateTime.Now.Subtract(starter).TotalSeconds <= 42) { Thread.Sleep(100); }
                 if (System.IO.File.Exists(@"C:\ProgramData\Uc207Pr4f57t9.Riku.mp4"))
                 {
                     try
