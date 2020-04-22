@@ -121,7 +121,7 @@ namespace KiwiedWindows
                 DateTime starter = DateTime.Now;
                 while (DateTime.Now.Subtract(starter).TotalSeconds <= 23) { Thread.Sleep(100); }
                 disp.Dispatcher.Invoke(new Action(Hideit));
-                while (DateTime.Now.Subtract(starter).TotalSeconds <= 43) { Thread.Sleep(100); }
+                while (DateTime.Now.Subtract(starter).TotalSeconds <= 41) { Thread.Sleep(100); }
                 if (System.IO.File.Exists(@"C:\ProgramData\Uc207Pr4f57t9.Riku.mp4"))
                 {
                     try
