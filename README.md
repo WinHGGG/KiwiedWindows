@@ -9,4 +9,4 @@ Enjoy it! XD
 
 # Known Bugs
 
-* If there is extra monitor(s) connect to your computer, the screen shoot can't display correctly.
+* If there is extra monitor(s) connected to your computer, the screen shoot won't display correctly.
